@@ -205,7 +205,7 @@ export const getKYCReviewList = async (params?: {
   return response;
 };
 
-export const getUserList = (params?: {
+export const getUserList = async (params?: {
   page?: number;
   limit?: number;
   search?: string;
@@ -219,9 +219,14 @@ export const getUserList = (params?: {
       .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
       .join("&")
     : "";
-  return request<{ users: AdminUser[]; totalPages: number; currentPage: number; total: number }>(
+  const response = await request<{ users: AdminUser[]; totalPages: number; currentPage: number; total: number }>(
     `/admin/users${queryString}`
   );
+  // Normalize user IDs (_id to id)
+  if (response.users) {
+    response.users = response.users.map(user => normalizeApiResponse(user));
+  }
+  return response;
 };
 
 export const getAdminUserDetail = async (id: string) => {

@@ -6,9 +6,9 @@ const getApiUrl = (): string => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  
+
   // Fallback to default backend URL
-  return "https://backend-hirearn.onrender.com/api";
+  return "https://api-hirearn.onrender.com/api";
 };
 
 export const BASE_URL = getApiUrl();
