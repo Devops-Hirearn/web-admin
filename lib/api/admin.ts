@@ -442,3 +442,282 @@ export const getPresignedViewUrl = async (s3Url: string): Promise<string> => {
   
   return response.signedUrl;
 };
+
+// ------------------------------
+// Admin Analytics APIs
+// ------------------------------
+export interface OverviewAnalytics {
+  jobsCreatedToday: number;
+  jobsCompletedToday: number;
+  jobsCancelledOrExpiredToday: number;
+  grossJobValueToday: number;
+  platformFeeToday: number;
+  gatewayFeesToday: number;
+  netPlatformRevenueToday: number;
+}
+
+export interface PaymentsHealthAnalytics {
+  paymentsCreatedToday: number;
+  paymentsCompletedToday: number;
+  paymentsPending: number;
+  paymentsPendingOver15Min: number;
+  paymentsFailed: number;
+  oldestPendingPaymentAgeMinutes: number | null;
+}
+
+export interface WalletHealthAnalytics {
+  walletCreditsToday: number;
+  walletDebitsToday: number;
+  manualAdjustmentsToday: number;
+  mismatchedWalletCount: number | null;
+}
+
+export interface JobExecutionAnalytics {
+  jobsInProgress: number;
+  expectedCheckinsToday: number;
+  actualCheckinsToday: number;
+  autoCheckoutsToday: number;
+  noShowsToday: number;
+}
+
+export interface SettlementsAnalytics {
+  jobsEligibleForSettlement: number;
+  jobsSettledToday: number;
+  settlementsPendingOver24h: number;
+  payoutFailuresToday: number;
+}
+
+export interface IncidentsAnalytics {
+  paymentIssuesToday: number;
+  settlementIssuesToday: number;
+  manualInterventionsToday: number;
+  unresolvedIncidentsCount: number;
+}
+
+export const getOverviewAnalytics = () =>
+  request<{ data: OverviewAnalytics }>('/admin/analytics/overview');
+
+export const getPaymentsHealthAnalytics = () =>
+  request<{ data: PaymentsHealthAnalytics }>('/admin/analytics/payments-health');
+
+export const getWalletHealthAnalytics = () =>
+  request<{ data: WalletHealthAnalytics }>('/admin/analytics/wallet-health');
+
+export const getJobExecutionAnalytics = () =>
+  request<{ data: JobExecutionAnalytics }>('/admin/analytics/job-execution');
+
+export const getSettlementsAnalytics = () =>
+  request<{ data: SettlementsAnalytics }>('/admin/analytics/settlements');
+
+export const getIncidentsAnalytics = () =>
+  request<{ data: IncidentsAnalytics }>('/admin/analytics/incidents');
+
+// ------------------------------
+// Enhanced Analytics APIs
+// ------------------------------
+export interface JobTimelineEvent {
+  type: string;
+  timestamp: string;
+  details: any;
+}
+
+export interface JobTimeline {
+  job: {
+    id: string;
+    title: string;
+    employer: any;
+    currentStatus: any;
+    createdAt: string;
+    updatedAt: string;
+  };
+  timeline: JobTimelineEvent[];
+  summary: {
+    totalEvents: number;
+    paymentsCount: number;
+    settlementAttemptsCount: number;
+    jobDaysCount: number;
+    auditLogsCount: number;
+  };
+}
+
+export interface JobsDetailed {
+  breakdown: Array<{
+    _id: {
+      status: string;
+      paymentStatus: string;
+      jobType: string;
+      payoutMode: string;
+    };
+    count: number;
+    totalAmount: number;
+    totalWorkers: number;
+    avgAmountPerJob: number;
+  }>;
+  trends: Array<{
+    _id: string;
+    count: number;
+    completed: number;
+    cancelled: number;
+    totalAmount: number;
+  }>;
+  jobsWithIssues: Array<{
+    _id: string;
+    title: string;
+    employer: any;
+    status: string;
+    paymentStatus: string;
+    completionConfirmedAt: string;
+    daysSinceCompletion: number;
+    totalAmount: number;
+  }>;
+  summary: {
+    totalJobs: number;
+    totalAmount: number;
+    totalWorkers: number;
+    jobsWithIssuesCount: number;
+  };
+}
+
+export interface PaymentsDetailed {
+  breakdown: Array<{
+    _id: {
+      status: string;
+      type: string;
+    };
+    count: number;
+    totalAmount: number;
+    avgAmount: number;
+  }>;
+  processingTimes: Array<{
+    _id: string;
+    avgProcessingTime: number;
+    minProcessingTime: number;
+    maxProcessingTime: number;
+    count: number;
+  }>;
+  failedPayments: Array<{
+    _id: string;
+    type: string;
+    amount: number;
+    failureReason?: string;
+    createdAt: string;
+    user: any;
+    job: any;
+  }>;
+  pendingPaymentsByAge: Array<{
+    _id: string;
+    count: number;
+    totalAmount: number;
+  }>;
+  summary: {
+    totalPayments: number;
+    totalAmount: number;
+    failedCount: number;
+    pendingCount: number;
+  };
+}
+
+export const getJobTimeline = (jobId: string) =>
+  request<{ data: JobTimeline }>(`/admin/analytics/job-timeline/${jobId}`);
+
+export const getJobsDetailed = (params?: {
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  jobType?: string;
+}) => {
+  const queryString = params
+    ? '?' + Object.entries(params)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join('&')
+    : '';
+  return request<{ data: JobsDetailed }>(`/admin/analytics/jobs-detailed${queryString}`);
+};
+
+export const getPaymentsDetailed = (params?: {
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  type?: string;
+}) => {
+  const queryString = params
+    ? '?' + Object.entries(params)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join('&')
+    : '';
+  return request<{ data: PaymentsDetailed }>(`/admin/analytics/payments-detailed${queryString}`);
+};
+
+export interface ProtectionPoolAnalytics {
+  current: {
+    balance: number;
+    totalContributions: number;
+    totalPayouts: number;
+    protectionCapPerJob: number;
+    netValue: number;
+    lastUpdated: string;
+  };
+  today: {
+    contributions: number;
+    payouts: number;
+    netChange: number;
+    jobsContributing: number;
+    jobsPaidFromPool: number;
+  };
+  dailyTracking: Array<{
+    date: string;
+    contributions: number;
+    payouts: number;
+    netChange: number;
+    jobsContributing: number;
+    jobsPaidFromPool: number;
+  }>;
+  coverage: {
+    jobsCoveredCount: number;
+    totalCoveredAmount: number;
+    employerDebtsCount: number;
+    totalUnpaidDebt: number;
+    eligibleJobsCount: number;
+  };
+  health: {
+    status: 'HEALTHY' | 'LOW' | 'CRITICAL';
+    message: string;
+    balance: number;
+    avgJobAmount: number;
+    estimatedCoverageCapacity: number;
+    utilizationRate: number;
+  };
+  jobsCovered: Array<{
+    id: string;
+    title: string;
+    employer: any;
+    amount: number;
+    paidAt: string;
+    createdAt: string;
+  }>;
+  employerDebts: Array<{
+    id: string;
+    employer: any;
+    job: any;
+    amount: number;
+    amountPaid: number;
+    remaining: number;
+    status: string;
+    createdAt: string;
+  }>;
+}
+
+export const getProtectionPoolAnalytics = (params?: {
+  startDate?: string;
+  endDate?: string;
+}) => {
+  const queryString = params
+    ? '?' + Object.entries(params)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join('&')
+    : '';
+  return request<{ data: ProtectionPoolAnalytics }>(`/admin/analytics/protection-pool${queryString}`);
+};

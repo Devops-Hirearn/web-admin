@@ -207,6 +207,12 @@ export default function AdminDashboard() {
               icon="📅"
               href="/admin/job-audit"
               />
+            <ActionCard
+              title="Extended Dashboard"
+              description="Real-time operational KPIs and analytics"
+              icon="📊"
+              href="/admin/analytics"
+              />
             </div>
           </div>
           </>
