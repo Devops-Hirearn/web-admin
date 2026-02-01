@@ -11,7 +11,7 @@ import {
   type PaymentsDetailed,
   type ProtectionPoolAnalytics,
 } from '@/lib/api/admin';
-import SkeletonLoader from '@/components/LoadingSpinner';
+import LoadingSpinner, { SkeletonLoader } from '@/components/LoadingSpinner';
 import Alert from '@/components/Alert';
 
 /**
@@ -69,7 +69,7 @@ export function JobTimelineViewer() {
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Job Timeline & Audit Log</h2>
-      
+
       <div className="mb-6">
         <div className="flex gap-2">
           <input
@@ -213,7 +213,7 @@ export function JobsDetailedView() {
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Jobs Detailed Analysis</h2>
-      
+
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -384,7 +384,7 @@ export function ProtectionPoolView() {
 
       {/* Today's Activity */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Today's Activity</h3>
+        <h3 className="text-lg font-semibold mb-3">Today&apos;s Activity</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-green-50 p-3 rounded-lg border border-green-200">
             <p className="text-xs text-gray-600">Contributions</p>
@@ -394,13 +394,11 @@ export function ProtectionPoolView() {
             <p className="text-xs text-gray-600">Payouts</p>
             <p className="text-xl font-bold text-red-700">{formatCurrency(data.today.payouts)}</p>
           </div>
-          <div className={`p-3 rounded-lg border ${
-            data.today.netChange >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-          }`}>
-            <p className="text-xs text-gray-600">Net Change</p>
-            <p className={`text-xl font-bold ${
-              data.today.netChange >= 0 ? 'text-green-700' : 'text-red-700'
+          <div className={`p-3 rounded-lg border ${data.today.netChange >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}>
+            <p className="text-xs text-gray-600">Net Change</p>
+            <p className={`text-xl font-bold ${data.today.netChange >= 0 ? 'text-green-700' : 'text-red-700'
+              }`}>
               {formatCurrency(data.today.netChange)}
             </p>
           </div>
@@ -489,9 +487,8 @@ export function ProtectionPoolView() {
                     <td className="px-4 py-3 text-sm">{day.date}</td>
                     <td className="px-4 py-3 text-sm text-right text-green-700">{formatCurrency(day.contributions)}</td>
                     <td className="px-4 py-3 text-sm text-right text-red-700">{formatCurrency(day.payouts)}</td>
-                    <td className={`px-4 py-3 text-sm text-right font-medium ${
-                      day.netChange >= 0 ? 'text-green-700' : 'text-red-700'
-                    }`}>
+                    <td className={`px-4 py-3 text-sm text-right font-medium ${day.netChange >= 0 ? 'text-green-700' : 'text-red-700'
+                      }`}>
                       {formatCurrency(day.netChange)}
                     </td>
                     <td className="px-4 py-3 text-sm text-right">{day.jobsContributing}</td>
