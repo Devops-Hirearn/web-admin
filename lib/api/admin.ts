@@ -96,6 +96,13 @@ export interface WithdrawalRequest {
     walletBalance: number;
     walletFrozen: boolean;
     isIdentityVerified?: boolean;
+    identityDocuments?: {
+      verificationStatus?: 'pending' | 'approved' | 'rejected';
+      aadhaarFront?: string;
+      aadhaarBack?: string;
+      selfie?: string;
+      panCard?: string;
+    };
   };
   amount: number;
   status: 'PENDING' | 'PROCESSING' | 'PAID' | 'REJECTED';

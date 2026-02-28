@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getKYCReviewList, approveKYC, rejectKYC, getAdminUserDetail, getPresignedViewUrl, AdminUser } from '@/lib/api/admin';
@@ -29,15 +29,7 @@ export default function KYCReviewPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-    fetchUsers();
-  }, [router, page, filterState]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
@@ -54,7 +46,15 @@ export default function KYCReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filterState]);
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    fetchUsers();
+  }, [router, fetchUsers]);
 
   // Helper to get user ID (handles both id and _id from backend)
   const getUserId = (user: AdminUser): string => {
@@ -594,8 +594,8 @@ export default function KYCReviewPage() {
                   onClick={handleConfirmAction}
                   disabled={!reason.trim() || !!actionLoading}
                   className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors flex items-center space-x-2 ${pendingAction.type === 'approve'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-red-600 hover:bg-red-700'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {actionLoading ? (
