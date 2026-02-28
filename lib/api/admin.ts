@@ -187,11 +187,12 @@ export const getCurrentUser = async () => {
 export const getKYCReviewList = async (params?: {
   page?: number;
   limit?: number;
+  state?: 'ACTIVE' | 'KYC_PENDING' | 'ON_HOLD' | 'SUSPENDED' | 'all';
 }) => {
   const queryString = params
     ? "?" +
     Object.entries(params)
-      .filter(([_, v]) => v !== undefined)
+      .filter(([_, v]) => v !== undefined && v !== 'all')
       .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
       .join("&")
     : "";

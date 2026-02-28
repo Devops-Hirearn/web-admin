@@ -9,12 +9,15 @@ import { BASE_URL } from '@/lib/api/client';
 import LoadingSpinner, { LoadingOverlay, SkeletonLoader } from '@/components/LoadingSpinner';
 import Alert from '@/components/Alert';
 
+type UserState = 'ACTIVE' | 'KYC_PENDING' | 'ON_HOLD' | 'SUSPENDED' | 'all';
+
 export default function KYCReviewPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [filterState, setFilterState] = useState<UserState>('all');
   const [showDocumentsModal, setShowDocumentsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [userDocuments, setUserDocuments] = useState<AdminUser | null>(null);
@@ -32,13 +35,17 @@ export default function KYCReviewPage() {
       return;
     }
     fetchUsers();
-  }, [router, page]);
+  }, [router, page, filterState]);
 
   const fetchUsers = async () => {
     try {
       setError(null);
       setLoading(true);
-      const response = await getKYCReviewList({ page, limit: 20 });
+      const params: any = { page, limit: 20 };
+      if (filterState !== 'all') {
+        params.state = filterState;
+      }
+      const response = await getKYCReviewList(params);
       setUsers(response.users || []);
       setTotalPages(response.totalPages || 1);
     } catch (error: any) {
@@ -85,7 +92,7 @@ export default function KYCReviewPage() {
       setError('Invalid user ID');
       return;
     }
-    
+
     try {
       setError(null);
       setLoadingDocuments(true);
@@ -181,8 +188,8 @@ export default function KYCReviewPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <Link 
-                href="/admin/dashboard" 
+              <Link
+                href="/admin/dashboard"
                 className="text-gray-600 hover:text-primary transition-colors flex items-center"
               >
                 <span className="mr-2">←</span>
@@ -216,6 +223,32 @@ export default function KYCReviewPage() {
             <Alert type="success" message={successMessage} onClose={() => setSuccessMessage(null)} />
           </div>
         )}
+
+        {/* Filter */}
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 border border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                User Status
+              </label>
+              <select
+                id="state"
+                value={filterState}
+                onChange={(e) => {
+                  setFilterState(e.target.value as UserState);
+                  setPage(1);
+                }}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              >
+                <option value="all">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="KYC_PENDING">KYC Pending</option>
+                <option value="ON_HOLD">On Hold</option>
+                <option value="SUSPENDED">Suspended</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">
           <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
@@ -456,15 +489,15 @@ export default function KYCReviewPage() {
                   </div>
                 )}
               </div>
-              {(!userDocuments.identityDocuments?.aadhaarFront && 
-                !userDocuments.identityDocuments?.aadhaarBack && 
-                !userDocuments.identityDocuments?.selfie && 
+              {(!userDocuments.identityDocuments?.aadhaarFront &&
+                !userDocuments.identityDocuments?.aadhaarBack &&
+                !userDocuments.identityDocuments?.selfie &&
                 !userDocuments.identityDocuments?.panCard) && (
-                <div className="text-center py-16">
-                  <div className="text-6xl mb-4">📄</div>
-                  <p className="text-gray-500 text-lg font-medium">No documents available</p>
-                </div>
-              )}
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">📄</div>
+                    <p className="text-gray-500 text-lg font-medium">No documents available</p>
+                  </div>
+                )}
             </div>
             <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
               <button
@@ -560,11 +593,10 @@ export default function KYCReviewPage() {
                 <button
                   onClick={handleConfirmAction}
                   disabled={!reason.trim() || !!actionLoading}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors flex items-center space-x-2 ${
-                    pendingAction.type === 'approve'
+                  className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-colors flex items-center space-x-2 ${pendingAction.type === 'approve'
                       ? 'bg-green-600 hover:bg-green-700'
                       : 'bg-red-600 hover:bg-red-700'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {actionLoading ? (
                     <>
