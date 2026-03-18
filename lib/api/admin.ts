@@ -79,8 +79,25 @@ export interface AdminActionLog {
     fullName?: string;
     phoneNumber: string;
   };
-  actionType: 'KYC_APPROVE' | 'KYC_REJECT' | 'DISPUTE_RESOLVE' | 'PAYOUT_PROCESS' | 'WALLET_FREEZE' | 'WALLET_UNFREEZE' | 'USER_SUSPEND' | 'USER_ACTIVATE' | 'USER_ON_HOLD' | 'SETTLEMENT_RETRY' | 'WITHDRAWAL_PROCESS' | 'WITHDRAWAL_REJECT';
-  entityType: 'USER' | 'JOB' | 'PAYOUT' | 'WITHDRAWAL' | 'SETTLEMENT' | 'DISPUTE';
+  actionType:
+    | 'KYC_APPROVE'
+    | 'KYC_REJECT'
+    | 'DISPUTE_RESOLVE'
+    | 'PAYOUT_PROCESS'
+    | 'PAYMENT_RECONCILE'
+    | 'WALLET_FREEZE'
+    | 'WALLET_UNFREEZE'
+    | 'USER_SUSPEND'
+    | 'USER_ACTIVATE'
+    | 'USER_ON_HOLD'
+    | 'SETTLEMENT_RETRY'
+    | 'SETTLEMENT_REVIEWED'
+    | 'WITHDRAWAL_PROCESS'
+    | 'WITHDRAWAL_REJECT'
+    | 'REFUND_APPROVE'
+    | 'REFUND_REJECT'
+    | 'REFUND_MARK_PAID';
+  entityType: 'USER' | 'JOB' | 'PAYMENT' | 'PAYOUT' | 'WITHDRAWAL' | 'SETTLEMENT' | 'DISPUTE' | 'REFUND';
   entityId: string;
   reason: string;
   metadata?: any;
@@ -293,6 +310,120 @@ export const unfreezeWallet = (userId: string, reason: string) =>
 // ------------------------------
 export const getPaymentSummary = () =>
   request<{ summary: PaymentSummary }>('/admin/payments/summary');
+
+export type PaymentStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'refunded'
+  | 'escalated'
+  | 'covered_by_platform';
+
+export type PaymentType =
+  | 'wallet_topup'
+  | 'job_payment'
+  | 'job_remaining_payment'
+  | 'job_posting_additional_payment'
+  | 'payout'
+  | 'deposit_add';
+
+export interface AdminPaymentItem {
+  _id: string;
+  type: PaymentType;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod?: {
+    type?: string;
+    upiId?: string;
+    cardLast4?: string;
+    cardBrand?: string;
+    bankName?: string;
+  };
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  receipt?: string | null;
+  user?: {
+    _id: string;
+    fullName?: string;
+    phoneNumber?: string;
+    role?: string;
+    isAdmin?: boolean;
+  };
+  job?: { _id: string; title?: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getPaymentsList = (params?: {
+  page?: number;
+  limit?: number;
+  status?: PaymentStatus | 'all';
+  type?: PaymentType | 'all';
+  q?: string;
+}) => {
+  const queryString = params
+    ? '?' +
+      Object.entries(params)
+        .filter(([_, v]) => v !== undefined && v !== 'all' && v !== '')
+        .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+        .join('&')
+    : '';
+
+  return request<{
+    success: boolean;
+    payments: AdminPaymentItem[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+  }>(`/admin/payments/list${queryString}`);
+};
+
+export const getPaymentsStats = (params?: {
+  type?: PaymentType | 'all';
+  q?: string;
+}) => {
+  const queryString = params
+    ? '?' +
+      Object.entries(params)
+        .filter(([_, v]) => v !== undefined && v !== 'all' && v !== '')
+        .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+        .join('&')
+    : '';
+
+  return request<{
+    success: boolean;
+    total: number;
+    breakdown: Array<{ _id: PaymentStatus; count: number; totalAmount: number }>;
+    totalsByStatus: Record<string, { count: number; totalAmount: number }>;
+  }>(`/admin/payments/stats${queryString}`);
+};
+
+export interface PaymentReconcileResult {
+  processed: number;
+  updated: number;
+  errors: number;
+  skipped: number;
+  duration: number;
+}
+
+export const reconcilePayments = (data: { reason: string; scanAllPending?: boolean }) =>
+  request<{ success: boolean; message: string } & PaymentReconcileResult>('/admin/payments/reconcile', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const reconcilePaymentById = (paymentId: string, data: { reason: string }) =>
+  request<{ success: boolean; ok?: boolean; reason?: string; razorpayStatus?: string }>(
+    `/admin/payments/reconcile/${paymentId}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }
+  );
 
 // ------------------------------
 // Dispute APIs

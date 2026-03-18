@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -211,11 +212,10 @@ export default function WithdrawalsPage() {
                   setStatusFilter(status);
                   setPage(1);
                 }}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  statusFilter === status
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${statusFilter === status
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {status === 'all' ? 'All' : status}
               </button>
@@ -364,8 +364,8 @@ export default function WithdrawalsPage() {
                                   user?.walletFrozen
                                     ? 'Wallet is frozen'
                                     : !user?.isIdentityVerified
-                                    ? 'KYC not approved'
-                                    : 'Process withdrawal'
+                                      ? 'KYC not approved'
+                                      : 'Process withdrawal'
                                 }
                               >
                                 {isLoading ? <LoadingSpinner size="sm" /> : '✓ Process'}
