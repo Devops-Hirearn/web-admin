@@ -130,6 +130,25 @@ export default function WithdrawalsPage() {
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
+  const bankCell = (snapshot: WithdrawalRequest['bankSnapshot']) => (
+    <div className="text-sm text-gray-900">
+      <div className="font-semibold">{snapshot?.accountHolderName ?? '—'}</div>
+      <div className="text-xs text-gray-600 mt-1">{snapshot?.bankName ?? '—'}</div>
+      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+        <div>
+          A/C:{' '}
+          <span className="font-mono text-gray-800 select-all break-all">
+            {(snapshot?.accountNumber ?? '').trim() || '—'}
+          </span>
+        </div>
+        <div>
+          IFSC:{' '}
+          <span className="font-mono text-gray-800 select-all">{snapshot?.ifscCode ?? '—'}</span>
+        </div>
+      </div>
+    </div>
+  );
+
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleString('en-IN', {
@@ -319,17 +338,7 @@ export default function WithdrawalsPage() {
                             Wallet: {formatCurrency(user?.walletBalance || 0)}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            <div className="font-semibold">{withdrawal.bankSnapshot.accountHolderName}</div>
-                            <div className="text-xs text-gray-600 mt-1">
-                              {withdrawal.bankSnapshot.bankName}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              A/C: ••••{withdrawal.bankSnapshot.accountNumber.slice(-4)} | IFSC: {withdrawal.bankSnapshot.ifscCode}
-                            </div>
-                          </div>
-                        </td>
+                        <td className="px-6 py-4">{bankCell(withdrawal.bankSnapshot)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(withdrawal.status)}
                           {withdrawal.payoutReferenceId && (
@@ -433,6 +442,12 @@ export default function WithdrawalsPage() {
                 </label>
                 <div className="px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-lg font-bold text-gray-900">
                   {formatCurrency(selectedWithdrawal.amount)}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Bank details</label>
+                <div className="px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm">
+                  {bankCell(selectedWithdrawal.bankSnapshot)}
                 </div>
               </div>
               <div className="mb-4">
